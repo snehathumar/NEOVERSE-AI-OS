@@ -79,11 +79,11 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
     body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; color: #1e293b; }
-    .welcome-title { font-size: 3rem; font-weight: 600; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, #2563eb, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .welcome-title { font-size: 3rem; font-weight: 600; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .welcome-subtitle { font-size: 1.2rem; color: #64748b; text-align: center; margin-bottom: 40px; font-weight: 400; }
     .glass-card { background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); transition: transform 0.2s, box-shadow 0.2s; color: #1e293b; }
     .glass-card:hover { transform: translateY(-2px); border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-    .metric-value { font-size: 2.2rem; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+    .metric-value { font-size: 2.2rem; font-weight: 600; color: #0f172a; margin-bottom: 4px; line-height: 1.2; }
     .metric-label { font-size: 0.85rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
     h1, h2, h3, h4, h5 { color: #0f172a !important; font-weight: 600; }
     p, span, div { color: #334155; }
@@ -151,13 +151,13 @@ if len(st.session_state.messages) == 0:
     # Dashboard Metrics
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.markdown(f"<div class='glass-card'><div class='metric-label'>Total Decisions</div><div class='metric-value'>{total_decisions}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-value'>{total_decisions}</div><div class='metric-label'>Total Decisions</div></div>", unsafe_allow_html=True)
     with m2:
-        st.markdown(f"<div class='glass-card'><div class='metric-label'>Approved</div><div class='metric-value'>{approved}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-value'>{approved}</div><div class='metric-label'>Approved</div></div>", unsafe_allow_html=True)
     with m3:
-        st.markdown(f"<div class='glass-card'><div class='metric-label'>Avg Confidence</div><div class='metric-value'>{int(avg_confidence) if isinstance(avg_confidence, (float, int)) else avg_confidence}%</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-value'>{int(avg_confidence) if isinstance(avg_confidence, (float, int)) else avg_confidence}%</div><div class='metric-label'>Avg Confidence</div></div>", unsafe_allow_html=True)
     with m4:
-        st.markdown(f"<div class='glass-card'><div class='metric-label'>System Status</div><div class='metric-value' style='color:#10b981;'>Operational</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-value' style='color:#10b981; font-size: 1.8rem;'>Operational</div><div class='metric-label'>System Status</div></div>", unsafe_allow_html=True)
 
     # Demo Buttons & Real AI Workspace
     st.markdown("### AI Workspace")
