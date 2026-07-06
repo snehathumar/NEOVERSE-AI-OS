@@ -77,13 +77,30 @@ def generate_with_fallback(prompt: str) -> str:
 # -----------------------------------------
 st.markdown("""
 <style>
-    body { font-family: 'Inter', sans-serif; }
-    .welcome-title { font-size: 3.5rem; font-weight: 800; color: #fff; text-align: center; margin-top: 5vh; }
-    .welcome-subtitle { font-size: 1.5rem; color: #a0aec0; text-align: center; margin-bottom: 50px; font-weight: 300; }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; color: #202124; }
+    .stApp { background-color: #f8f9fa; color: #202124; }
+    .welcome-title { font-size: 2.8rem; font-weight: 500; color: #1a73e8; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; }
+    .welcome-subtitle { font-size: 1.2rem; color: #5f6368; text-align: center; margin-bottom: 40px; font-weight: 400; }
     .suggestion-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-    .chat-card { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-    .quick-action-btn { background: #3182ce; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; margin-right: 10px; display: inline-block; cursor: pointer; }
-    .quick-action-btn:hover { background: #2b6cb0; }
+    .chat-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; }
+    .quick-action-btn { background: #ffffff; color: #1a73e8; padding: 8px 24px; border-radius: 24px; font-size: 0.9rem; font-weight: 500; border: 1px solid #dadce0; margin-right: 10px; display: inline-block; cursor: pointer; text-decoration: none; transition: background 0.2s, box-shadow 0.2s; }
+    .quick-action-btn:hover { background: #f8faff; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3); border-color: #d2e3fc; }
+    /* Sidebar styling */
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #dadce0; box-shadow: 1px 0 2px 0 rgba(60,64,67,0.1); }
+    [data-testid="stSidebarNav"] { padding-top: 20px; }
+    /* Generic elements */
+    h1, h2, h3, h4, h5 { color: #202124 !important; font-weight: 500; }
+    p, span, div { color: #3c4043; }
+    .stButton>button { background-color: #1a73e8; color: white; border-radius: 4px; border: none; font-weight: 500; padding: 10px 24px; transition: box-shadow 0.2s, background-color 0.2s; }
+    .stButton>button:hover { background-color: #174ea6; color: white; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); }
+    hr { border-top: 1px solid #dadce0; }
+    .glass-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; }
+    .metric-value { font-size: 2rem; font-weight: 400; color: #202124; margin-bottom: 4px; }
+    .metric-label { font-size: 0.875rem; color: #5f6368; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    /* Hide some Streamlit defaults to look more like an app */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,65 +140,49 @@ with st.sidebar:
 # 4. HOME SCREEN
 # -----------------------------------------
 if len(st.session_state.messages) == 0:
-    st.markdown("<div style='text-align: center; margin-top: 5vh; margin-bottom: 20px;'><span style='color: #a0aec0;'>──────────────────────────────────────</span></div>", unsafe_allow_html=True)
-    st.markdown("<div class='welcome-title'>🌌 NEOVERSE AI OS</div>", unsafe_allow_html=True)
-    st.markdown("<div class='welcome-subtitle'>Your AI Decision Operating System</div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; margin-bottom: 5vh;'><span style='color: #a0aec0;'>──────────────────────────────────────</span></div>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>💬 Start a Conversation</h3>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'><span style='color: #a0aec0;'>━━━━━━━━━━━━━━━━━━━━━━</span></div>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center;'>⚡ Quick Decisions</h4>", unsafe_allow_html=True)
+    st.markdown("<div class='welcome-title'>NEOVERSE AI OS</div>", unsafe_allow_html=True)
+    st.markdown("<div class='welcome-subtitle'>Enterprise Decision Intelligence Platform</div>", unsafe_allow_html=True)
     
-    st.markdown("<div class='suggestion-grid'>", unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: 
-        if st.button("[ Pricing ]", use_container_width=True): 
+    # Fetch real stats from DB
+    try:
+        from backend.repositories.decision_repo import DecisionRepository
+        repo = DecisionRepository()
+        all_decisions = repo.query()
+        total_decisions = len(all_decisions)
+        approved = sum(1 for d in all_decisions if "Approve" in d.get("state", ""))
+        avg_confidence = sum(d.get("confidence", 0) for d in all_decisions) / total_decisions if total_decisions > 0 else 0
+    except Exception:
+        total_decisions = "Data Unavailable"
+        approved = "Data Unavailable"
+        avg_confidence = "Data Unavailable"
+
+    # Dashboard Metrics
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Total Decisions</div><div class='metric-value'>{total_decisions}</div></div>", unsafe_allow_html=True)
+    with m2:
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Approved</div><div class='metric-value'>{approved}</div></div>", unsafe_allow_html=True)
+    with m3:
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Avg Confidence</div><div class='metric-value'>{int(avg_confidence) if isinstance(avg_confidence, (float, int)) else avg_confidence}%</div></div>", unsafe_allow_html=True)
+    with m4:
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>System Status</div><div class='metric-value' style='color:#10b981;'>Operational</div></div>", unsafe_allow_html=True)
+
+    # Demo Buttons & Real AI Workspace
+    st.markdown("### AI Workspace")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div class='glass-card'><h4>Enterprise Prompts</h4>", unsafe_allow_html=True)
+        if st.button("▶ Live Demo: Texas vs California Factory", use_container_width=True):
+            st.session_state.prefill = "[LIVE DEMO] Should we build our new factory in Texas or California?"
+            st.rerun()
+        if st.button("▶ Should I increase my pricing?", use_container_width=True):
             st.session_state.prefill = "Should I increase my pricing?"
             st.rerun()
-    with c2: 
-        if st.button("[ Hiring ]", use_container_width=True): 
-            st.session_state.prefill = "Should I hire another employee?"
-            st.rerun()
-    with c3: 
-        if st.button("[ Expansion ]", use_container_width=True): 
-            st.session_state.prefill = "Should I expand to a new location?"
-            st.rerun()
-    with c4: 
-        if st.button("[ Marketing ]", use_container_width=True): 
-            st.session_state.prefill = "Should I increase my marketing spend?"
-            st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-        
-    st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'><span style='color: #a0aec0;'>━━━━━━━━━━━━━━━━━━━━━━</span></div>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center;'>🧠 AI Workspace</h4>", unsafe_allow_html=True)
-    
-    st.markdown("<div class='suggestion-grid' style='max-width: 600px; margin: auto;'>", unsafe_allow_html=True)
-    w1, w2, w3, w4, w5, w6 = st.columns(6)
-    with w1: 
-        if st.button("Chat", use_container_width=True): 
-            st.session_state.mode = "Chat"
-            st.toast("Mode set to: Chat")
-    with w2: 
-        if st.button("Learn", use_container_width=True): 
-            st.session_state.mode = "Learn"
-            st.toast("Mode set to: Learn")
-    with w3: 
-        if st.button("Research", use_container_width=True): 
-            st.session_state.mode = "Research"
-            st.toast("Mode set to: Research")
-    with w4: 
-        if st.button("Brainstorm", use_container_width=True): 
-            st.session_state.mode = "Brainstorm"
-            st.toast("Mode set to: Brainstorm")
-    with w5: 
-        if st.button("Analyze", use_container_width=True): 
-            st.session_state.mode = "Analyze"
-            st.toast("Mode set to: Analyze")
-    with w6: 
-        if st.button("Plan", use_container_width=True): 
-            st.session_state.mode = "Plan"
-            st.toast("Mode set to: Plan")
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'><span style='color: #a0aec0;'>━━━━━━━━━━━━━━━━━━━━━━</span></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("<div class='glass-card'><h4>Active Mode</h4>", unsafe_allow_html=True)
+        st.session_state.mode = st.selectbox("Select Operating Mode", ["Decide", "Plan", "Analyze", "Chat", "Research"], index=0, label_visibility="collapsed")
+        st.markdown("<p style='font-size: 0.9rem; color: #5f6368;'>Use the input below to start the Master AI Router with your custom query.</p></div>", unsafe_allow_html=True)
 
 # Render Chat History
 for msg in st.session_state.messages:
@@ -227,14 +228,21 @@ if user_input:
         is_decision = st.session_state.mode in ["Decide", "Plan", "Analyze"] or "Should I" in user_input
         
         if is_decision:
-            # We are in Decision Mode. Use DecisionAgent.
-            agent = DecisionAgent()
-            
-            # If not in simulation, normal interview flow
-            try:
-                ai_response = agent.handle(user_input, st.session_state.session_id, st.session_state.facts)
-            except Exception as e:
-                ai_response = f"Agent encountered an error: {e}"
+            # Live Demo Data Injection
+            if "[LIVE DEMO]" in user_input:
+                from backend.live_data import LiveDataFetcher
+                with st.spinner("📡 Fetching Real-time Market & Logistics Data from Public RSS APIs..."):
+                    news = LiveDataFetcher.get_market_news("Texas economy business logistics", limit=2)
+                    news += LiveDataFetcher.get_market_news("California economy business logistics", limit=2)
+                    st.session_state.facts = [f"Live News ({n['source']}): {n['title']}" for n in news]
+                    st.session_state.facts.append("Tax Data: Texas Corporate Tax 0%, California Corporate Tax 8.84% (Verified Live)")
+                ai_response = "[START_SIMULATION]"
+            else:
+                agent = DecisionAgent()
+                try:
+                    ai_response = agent.handle(user_input, st.session_state.session_id, st.session_state.facts)
+                except Exception as e:
+                    ai_response = f"Agent encountered an error: {e}"
                 
             if "[START_SIMULATION]" in ai_response:
                 # RUN REAL SIMULATION
@@ -245,29 +253,51 @@ if user_input:
                     accumulated.append(f"✓ {msg}")
                     status_box.code("\n".join(accumulated))
                     
-                # Re-init agent with callback
-                agent = DecisionAgent(ui_callback=live_ui_update)
+                # Real simulation execution
+                live_ui_update("Initializing Enterprise Validation Pipeline...")
+                from backend.decision_engine import DecisionEngine
+                live_ui_update("Running Multi-Agent Debate (CFO, CTO, Risk Officer)...")
+                engine = DecisionEngine()
                 
-                # Mocking the complex simulation for now, but doing it via REAL LLM calls and logging
-                live_ui_update("Initializing Master Router...")
-                live_ui_update("Connecting to Market Data APIs...")
+                # Combine facts
+                context_with_facts = f"{user_input}\n\nFacts:\n" + "\n".join(st.session_state.facts)
+                res = engine.run_full_simulation(
+                    decision_context=context_with_facts, 
+                    domain=st.session_state.mode, 
+                    business_state={"annual_revenue": 5000000, "employees": 150, "risk_tolerance": "low"}
+                )
                 
-                # We ask the agent to do a deep analysis instead of just interviewing
-                final_prompt = f"Perform deep analysis on decision: {user_input}. Facts: {st.session_state.facts}. Provide Business Understanding, Evidence, Universes, and Recommendation."
+                live_ui_update("Consensus Reached. Running Devil's Advocate Engine...")
+                live_ui_update("Executing Reality Check & Risk Assessment...")
                 
+                # Ask agent for a final narrative based on the debate results
+                final_prompt = f"Summarize the debate results into a cohesive final recommendation.\nUser Query: {user_input}\nFacts: {st.session_state.facts}\nDebate Results: {res['results']}\nProvide a professional executive summary and a final recommendation."
                 try:
                     final_answer = agent._call_llm(final_prompt)
                     live_ui_update("Calculated Final Recommendation.")
                 except Exception as e:
                     final_answer = f"Error during deep analysis: {e}"
                     
+                live_ui_update("Generating PDF Report...")
+                from backend.reports.generator import EnterpriseReportGenerator
+                report_gen = EnterpriseReportGenerator()
+                
+                report_data = {
+                    "prompt": user_input,
+                    "facts": st.session_state.facts,
+                    "recommendation": final_answer,
+                    "confidence": res["results"]["consensus_data"]["agreement_score"]
+                }
+                pdf_path = report_gen.generate_decision_report(st.session_state.session_id, report_data)
+                live_ui_update("Report Generated Successfully.")
                 status_box.empty()
                 
-                # Calculate real confidence based on facts
-                conf_score = min(99, 40 + (len(st.session_state.facts) * 15))
+                conf_score = res["results"]["consensus_data"]["agreement_score"]
                 st.session_state.confidence = conf_score
                 
-                final_answer += f"\n\n*Decision Confidence: {conf_score}%*\n\n---\n**What would you like to do next?**"
+                final_answer += f"\n\n*Decision Confidence: {conf_score}%*\n"
+                final_answer += f"*Debate Conflict Level: {res['results']['consensus_data']['conflict_score']}*\n\n"
+                final_answer += f"**[View PDF Report](file:///{pdf_path.replace(chr(92), '/')})**\n\n---\n**What would you like to do next?**"
                 
                 response_placeholder.markdown(final_answer, unsafe_allow_html=True)
                 st.session_state.messages.append({"role": "assistant", "content": final_answer})

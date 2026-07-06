@@ -8,24 +8,13 @@ st.set_page_config(page_title="NEOVERSE AI | Executive Validation", layout="wide
 
 st.markdown("""
 <style>
-    .glass-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        color: white;
-    }
-    .minority-card {
-        background: rgba(255, 50, 50, 0.1);
-        border: 1px solid rgba(255, 50, 50, 0.3);
-    }
-    .expert-avatar {
-        font-size: 2rem;
-        margin-right: 10px;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    body, .stApp { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; color: #202124; }
+    .glass-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; color: #202124; }
+    .minority-card { background: #fce8e6; border: 1px solid #fad2cf; color: #a50e0e; }
+    .expert-avatar { font-size: 2rem; margin-right: 10px; }
+    h1, h2, h3 { color: #202124 !important; font-weight: 500; }
+    hr { border-top: 1px solid #dadce0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,7 +66,7 @@ if run_btn:
         if conf_timeline:
             df_conf = pd.DataFrame(conf_timeline)
             fig_conf = px.line(df_conf, x="stage", y="score", title="Confidence Evolution Timeline", markers=True)
-            fig_conf.update_layout(yaxis_range=[0,100], template="plotly_dark")
+            fig_conf.update_layout(yaxis_range=[0,100], template="plotly_white", margin=dict(t=40, b=0, l=0, r=0))
             st.plotly_chart(fig_conf, use_container_width=True)
             
     with c2:
@@ -96,7 +85,7 @@ if run_btn:
                 theta=labels + [labels[0]],
                 fill='toself'
             ))
-            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, title="Structured Uncertainty Matrix", template="plotly_dark")
+            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, title="Structured Uncertainty Matrix", template="plotly_white", margin=dict(t=40, b=0, l=0, r=0))
             st.plotly_chart(fig_rad, use_container_width=True)
 
     # 3. The Debate Floor
@@ -110,7 +99,29 @@ if run_btn:
     cols = st.columns(len(votes) if votes else 1)
     for idx, v in enumerate(votes):
         with cols[idx]:
-            st.markdown(f'<div class="glass-card"><span class="expert-avatar">🧑‍💼</span><b>{v.get("agent")}</b><br/>Vote: {v.get("vote")}<hr/><small>{v.get("justification")}</small></div>', unsafe_allow_html=True)
+            # Extracted visual representation
+            agent_role = v.get("agent", "Agent")
+            vote_val = v.get("vote", "N/A")
+            justification = v.get("justification", "")
+            
+            # Use color based on vote
+            vote_color = "#10b981" if "APPROVE" in str(vote_val).upper() else "#ef4444"
+            if "CONDITIONAL" in str(vote_val).upper(): vote_color = "#f59e0b"
+            
+            st.markdown(f'''
+            <div class="glass-card">
+                <div style="display:flex; align-items:center; margin-bottom:10px;">
+                    <span class="expert-avatar">🧑‍💼</span>
+                    <div>
+                        <b style="font-size:1.1rem;">{agent_role}</b><br/>
+                        <span style="color: {vote_color}; font-weight:600; font-size:0.9rem;">VOTE: {vote_val}</span>
+                    </div>
+                </div>
+                <hr style="margin: 10px 0;"/>
+                <p style="font-size:0.9rem; color:#5f6368; font-weight:500; margin-bottom:4px;">REASONING:</p>
+                <small style="color:#3c4043; line-height:1.4;">{justification}</small>
+            </div>
+            ''', unsafe_allow_html=True)
             
     # 4. Intelligence Panels
     st.markdown("### 🧠 Post-Debate Intelligence")
