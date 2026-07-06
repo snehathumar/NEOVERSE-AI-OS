@@ -97,21 +97,25 @@ class DynamicModelOrchestrator:
             return {"error": True, "error_message": "No healthy models available to handle the request."}
             
         # Strongly enforce JSON format to avoid parsing errors which cause fallback loops
-        json_enforced_prompt = prompt + "\n\nCRITICAL: Return ONLY raw JSON. No markdown formatting, no backticks, no text outside the JSON object. Just the raw { or [."
+        json_enforced_prompt = prompt + "\n\nCRITICAL: Return ONLY raw JSON. No markdown formatting, no backticks, no explanations outside the JSON object."
             
         for model_name in healthy_models:
             try:
                 print(f"[Model Orchestrator] Generating JSON with {model_name}...")
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(json_enforced_prompt)
-                text = response.text.strip()
                 
-                if text.startswith("```json"):
-                    text = text[7:]
-                elif text.startswith("```"):
-                    text = text[3:]
-                if text.endswith("```"):
-                    text = text[:-3]
+                try:
+                    text = response.text.strip()
+                except ValueError:
+                    # Happens if response was blocked by safety settings
+                    raise Exception("Response blocked by safety filters.")
+                
+                import re
+                # Try to extract JSON object or array using regex if there's markdown
+                json_match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+                if json_match:
+                    text = json_match.group(1)
                     
                 parsed_json = json.loads(text.strip())
                 
