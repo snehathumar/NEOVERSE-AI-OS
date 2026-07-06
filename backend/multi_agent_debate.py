@@ -140,25 +140,21 @@ class DebateSystem:
 
     def run_debate(self, decision_context: str) -> dict:
         agent_responses = {}
-        threads = []
-        results_lock = threading.Lock()
-
-        # Run independent agents concurrently
-        def worker(agent):
-            result = agent.analyze(decision_context)
-            with results_lock:
-                agent_responses[agent.name] = result
-
+        
+        # Run independent agents sequentially to avoid Free Tier Rate Limits (15 RPM)
+        # which causes the SDK to hang in automatic retries.
         for agent in self.agents:
-            t = threading.Thread(target=worker, args=(agent,))
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join()
+            try:
+                result = agent.analyze(decision_context)
+                agent_responses[agent.name] = result
+            except Exception as e:
+                agent_responses[agent.name] = {"stance": "Neutral", "arguments": [f"Error: {e}"], "counter_arguments": []}
 
         # Moderator synthesizes the final verdict
-        moderation_result = self.moderator.summarize_debate(decision_context, agent_responses)
+        try:
+            moderation_result = self.moderator.summarize_debate(decision_context, agent_responses)
+        except Exception as e:
+            moderation_result = {"consensus": "Failed", "disagreements": [str(e)], "final_verdict": "Pipeline Error", "confidence_score": 0}
         
         return {
             "individual_analyses": agent_responses,
