@@ -77,27 +77,18 @@ def generate_with_fallback(prompt: str) -> str:
 # -----------------------------------------
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-    body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; color: #202124; }
-    .stApp { background-color: #f8f9fa; color: #202124; }
-    .welcome-title { font-size: 2.8rem; font-weight: 500; color: #1a73e8; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; }
-    .welcome-subtitle { font-size: 1.2rem; color: #5f6368; text-align: center; margin-bottom: 40px; font-weight: 400; }
-    .suggestion-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-    .chat-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; }
-    .quick-action-btn { background: #ffffff; color: #1a73e8; padding: 8px 24px; border-radius: 24px; font-size: 0.9rem; font-weight: 500; border: 1px solid #dadce0; margin-right: 10px; display: inline-block; cursor: pointer; text-decoration: none; transition: background 0.2s, box-shadow 0.2s; }
-    .quick-action-btn:hover { background: #f8faff; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3); border-color: #d2e3fc; }
-    /* Sidebar styling */
-    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #dadce0; box-shadow: 1px 0 2px 0 rgba(60,64,67,0.1); }
-    [data-testid="stSidebarNav"] { padding-top: 20px; }
-    /* Generic elements */
-    h1, h2, h3, h4, h5 { color: #202124 !important; font-weight: 500; }
-    p, span, div { color: #3c4043; }
-    .stButton>button { background-color: #1a73e8; color: white; border-radius: 4px; border: none; font-weight: 500; padding: 10px 24px; transition: box-shadow 0.2s, background-color 0.2s; }
-    .stButton>button:hover { background-color: #174ea6; color: white; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); }
-    hr { border-top: 1px solid #dadce0; }
-    .glass-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; }
-    .metric-value { font-size: 2rem; font-weight: 400; color: #202124; margin-bottom: 4px; }
-    .metric-label { font-size: 0.875rem; color: #5f6368; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; }
+    .welcome-title { font-size: 3rem; font-weight: 600; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, #8ab4f8, #f4b5b9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .welcome-subtitle { font-size: 1.2rem; color: #9aa0a6; text-align: center; margin-bottom: 40px; font-weight: 400; }
+    .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 24px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); transition: transform 0.2s, box-shadow 0.2s; }
+    .glass-card:hover { transform: translateY(-2px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
+    .metric-value { font-size: 2.2rem; font-weight: 500; color: #ffffff; margin-bottom: 4px; }
+    .metric-label { font-size: 0.85rem; color: #9aa0a6; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    h1, h2, h3, h4, h5 { color: #ffffff !important; font-weight: 500; }
+    hr { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+    .stButton>button { border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 500; transition: all 0.3s ease; }
+    .stButton>button:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     /* Hide some Streamlit defaults to look more like an app */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}

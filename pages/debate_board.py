@@ -8,13 +8,14 @@ st.set_page_config(page_title="NEOVERSE AI | Executive Validation", layout="wide
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-    body, .stApp { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; color: #202124; }
-    .glass-card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); border: 1px solid #dadce0; color: #202124; }
-    .minority-card { background: #fce8e6; border: 1px solid #fad2cf; color: #a50e0e; }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; }
+    .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 24px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); transition: transform 0.2s, box-shadow 0.2s; color: #f8f9fa;}
+    .glass-card:hover { transform: translateY(-2px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
+    .minority-card { background: rgba(252, 232, 230, 0.1); border: 1px solid #fad2cf; color: #f28b82; }
     .expert-avatar { font-size: 2rem; margin-right: 10px; }
-    h1, h2, h3 { color: #202124 !important; font-weight: 500; }
-    hr { border-top: 1px solid #dadce0; }
+    h1, h2, h3 { color: #ffffff !important; font-weight: 500; }
+    hr { border-top: 1px solid rgba(255, 255, 255, 0.1); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,7 +67,7 @@ if run_btn:
         if conf_timeline:
             df_conf = pd.DataFrame(conf_timeline)
             fig_conf = px.line(df_conf, x="stage", y="score", title="Confidence Evolution Timeline", markers=True)
-            fig_conf.update_layout(yaxis_range=[0,100], template="plotly_white", margin=dict(t=40, b=0, l=0, r=0))
+            fig_conf.update_layout(yaxis_range=[0,100], template="plotly_dark", margin=dict(t=40, b=0, l=0, r=0))
             st.plotly_chart(fig_conf, use_container_width=True)
             
     with c2:
@@ -85,7 +86,7 @@ if run_btn:
                 theta=labels + [labels[0]],
                 fill='toself'
             ))
-            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, title="Structured Uncertainty Matrix", template="plotly_white", margin=dict(t=40, b=0, l=0, r=0))
+            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, title="Structured Uncertainty Matrix", template="plotly_dark", margin=dict(t=40, b=0, l=0, r=0))
             st.plotly_chart(fig_rad, use_container_width=True)
 
     # 3. The Debate Floor
