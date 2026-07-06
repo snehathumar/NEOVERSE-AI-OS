@@ -78,17 +78,18 @@ def generate_with_fallback(prompt: str) -> str:
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
-    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; }
-    .welcome-title { font-size: 3rem; font-weight: 600; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, #8ab4f8, #f4b5b9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .welcome-subtitle { font-size: 1.2rem; color: #9aa0a6; text-align: center; margin-bottom: 40px; font-weight: 400; }
-    .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 24px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); transition: transform 0.2s, box-shadow 0.2s; }
-    .glass-card:hover { transform: translateY(-2px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
-    .metric-value { font-size: 2.2rem; font-weight: 500; color: #ffffff; margin-bottom: 4px; }
-    .metric-label { font-size: 0.85rem; color: #9aa0a6; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
-    h1, h2, h3, h4, h5 { color: #ffffff !important; font-weight: 500; }
-    hr { border-top: 1px solid rgba(255, 255, 255, 0.1); }
-    .stButton>button { border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 500; transition: all 0.3s ease; }
-    .stButton>button:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
+    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; color: #1e293b; }
+    .welcome-title { font-size: 3rem; font-weight: 600; text-align: center; margin-top: 3vh; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, #2563eb, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .welcome-subtitle { font-size: 1.2rem; color: #64748b; text-align: center; margin-bottom: 40px; font-weight: 400; }
+    .glass-card { background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); transition: transform 0.2s, box-shadow 0.2s; color: #1e293b; }
+    .glass-card:hover { transform: translateY(-2px); border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    .metric-value { font-size: 2.2rem; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+    .metric-label { font-size: 0.85rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    h1, h2, h3, h4, h5 { color: #0f172a !important; font-weight: 600; }
+    p, span, div { color: #334155; }
+    hr { border-top: 1px solid #e2e8f0; }
+    .stButton>button { border-radius: 8px; border: 1px solid #2563eb; background: #2563eb; color: #ffffff; font-weight: 500; transition: all 0.3s ease; }
+    .stButton>button:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
     /* Hide some Streamlit defaults to look more like an app */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
