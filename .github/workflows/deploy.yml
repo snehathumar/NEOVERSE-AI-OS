@@ -1,0 +1,67 @@
+name: NEOVERSE Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test_and_scan:
+    name: Run Tests & Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+        
+      - name: Run Unit Tests
+        run: pytest backend/tests/
+        
+      - name: Run Security Audit (Bandit)
+        run: |
+          pip install bandit
+          bandit -r backend/ -ll
+
+  build_and_deploy:
+    name: Build Docker & Deploy to K8s
+    needs: test_and_scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        
+      - name: Build & Push Docker Image
+        run: |
+          gcloud auth configure-docker
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }} -f backend/Dockerfile .
+          docker push gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }}
+          # Tag as latest
+          docker tag gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }} gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:latest
+          docker push gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:latest
+          
+      - name: Deploy to Kubernetes
+        run: |
+          gcloud container clusters get-credentials neoverse-cluster --region us-central1 --project ${{ secrets.GCP_PROJECT }}
+          # Validate manifests (Dry Run)
+          kubectl apply -k backend/deployment/k8s/ --dry-run=client
+          # Apply manifests
+          kubectl apply -k backend/deployment/k8s/
+          # Trigger rolling update
+          kubectl rollout restart deployment/neoverse-api -n neoverse-prod
+          kubectl rollout restart deployment/neoverse-worker -n neoverse-prod
+          # Rollback on failure
+          kubectl rollout status deployment/neoverse-api -n neoverse-prod --timeout=300s || kubectl rollout undo deployment/neoverse-api -n neoverse-prod
+          kubectl rollout status deployment/neoverse-worker -n neoverse-prod --timeout=300s || kubectl rollout undo deployment/neoverse-worker -n neoverse-prod

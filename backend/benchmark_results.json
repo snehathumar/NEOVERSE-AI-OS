@@ -1,0 +1,7 @@
+{
+    "num_scenarios": 500000,
+    "pandas_cpu_time_seconds": 0.1711,
+    "cudf_gpu_time_seconds": null,
+    "gpu_available": false,
+    "speedup_factor": null
+}

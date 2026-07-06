@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neoverse-ingress
+  namespace: neoverse-prod
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # Enable TLS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate Limiting
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  tls:
+  - hosts:
+    - api.neoverse.ai
+    secretName: neoverse-tls-cert
+  rules:
+  - host: api.neoverse.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: neoverse-api-service
+            port:
+              number: 80

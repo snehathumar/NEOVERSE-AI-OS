@@ -1,0 +1,12 @@
+streamlit
+google-generativeai
+python-dotenv
+pandas
+numpy
+jsonschema
+google-cloud-bigquery
+google-cloud-firestore
+google-cloud-storage
+google-cloud-secret-manager
+google-cloud-logging
+tenacity
