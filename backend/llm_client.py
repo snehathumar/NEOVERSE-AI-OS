@@ -42,11 +42,12 @@ class DynamicModelOrchestrator:
             # Keep only text generation models
             valid_models = [m for m in available if 'generateContent' in m.supported_generation_methods]
             
-            # Rank dynamically based on metadata (e.g. output token limit, or string matching as a proxy for capability if limits aren't available)
-            # The exact metadata properties vary, so we sort safely.
+            # Rank dynamically based on output token limit
             valid_models.sort(key=lambda m: getattr(m, 'output_token_limit', 0), reverse=True)
             
-            self._models = [m.name for m in valid_models]
+            # Keep only the top 3 highest capacity models to prevent long fallback loops!
+            # The user requested no hardcoding of names, so we just slice the dynamically sorted list.
+            self._models = [m.name for m in valid_models][:3]
             self._last_refresh = time.time()
             
             # Reset health status
@@ -54,11 +55,10 @@ class DynamicModelOrchestrator:
                 if name not in self._health_status:
                     self._health_status[name] = {"status": "healthy", "retry_after": 0}
                     
-            print(f"[Model Orchestrator] Discovered {len(self._models)} valid models.")
+            print(f"[Model Orchestrator] Discovered valid models, keeping top 3: {self._models}")
         except Exception as e:
             print(f"[Model Orchestrator] Failed to refresh models: {e}")
             if not self._models:
-                # Absolute fallback if API call fails entirely, but avoiding hardcoding families.
                 self._models = ["models/gemini-2.5-pro", "models/gemini-1.5-pro"]
                 for m in self._models:
                     self._health_status[m] = {"status": "healthy", "retry_after": 0}
@@ -96,10 +96,14 @@ class DynamicModelOrchestrator:
         if not healthy_models:
             return {"error": True, "error_message": "No healthy models available to handle the request."}
             
+        # Strongly enforce JSON format to avoid parsing errors which cause fallback loops
+        json_enforced_prompt = prompt + "\n\nCRITICAL: Return ONLY raw JSON. No markdown formatting, no backticks, no text outside the JSON object. Just the raw { or [."
+            
         for model_name in healthy_models:
             try:
+                print(f"[Model Orchestrator] Generating JSON with {model_name}...")
                 model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
+                response = model.generate_content(json_enforced_prompt)
                 text = response.text.strip()
                 
                 if text.startswith("```json"):
@@ -117,6 +121,7 @@ class DynamicModelOrchestrator:
                 if custom_validation_fn:
                     custom_validation_fn(parsed_json)
                     
+                print(f"[Model Orchestrator] Success with {model_name}.")
                 return parsed_json
                 
             except Exception as e:
