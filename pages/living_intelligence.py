@@ -20,23 +20,27 @@ st.set_page_config(page_title="NEOVERSE AI | Living Intelligence", layout="wide"
 
 st.markdown("""
 <style>
-    .glass-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        color: white;
-    }
-    .alert-critical {
-        background: rgba(255, 50, 50, 0.15);
-        border-left: 5px solid #ff3333;
-    }
-    .alert-high {
-        background: rgba(255, 165, 0, 0.15);
-        border-left: 5px solid #ffa500;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; color: #1e293b; }
+    .glass-card, .kpi-card, .metric-card { background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); transition: transform 0.2s, box-shadow 0.2s; color: #1e293b; }
+    .glass-card:hover, .kpi-card:hover, .metric-card:hover { transform: translateY(-2px); border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    .minority-card { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; }
+    .expert-avatar { font-size: 2rem; margin-right: 10px; }
+    h1, h2, h3, h4, h5 { color: #0f172a !important; font-weight: 600; }
+    hr { border-top: 1px solid #e2e8f0; }
+    /* specific overrides */
+    .status-ok { color: #10b981; font-weight: bold; }
+    .status-warn { color: #f59e0b; font-weight: bold; }
+    .status-alert { color: #ef4444; font-weight: bold; }
+    .gpu-active { color: #10b981; font-weight: bold; }
+    .gpu-inactive { color: #f59e0b; font-weight: bold; }
+    .bq-connected { color: #2563eb; font-weight: bold; }
+    .alert-critical { background: #fef2f2; border-left: 5px solid #ef4444; }
+    .alert-high { background: #fffbeb; border-left: 5px solid #f59e0b; }
+    .badge { padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 0.85em; display: inline-block; margin-bottom: 10px; }
+    .badge-Pending { background: #fef3c7; color: #b45309; }
+    .badge-Approved { background: #d1fae5; color: #047857; }
+    .badge-Rejected { background: #fee2e2; color: #b91c1c; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -124,7 +128,7 @@ with t1:
         if conf_data:
             df_conf = pd.DataFrame(conf_data)
             fig = px.line(df_conf, x="Version", y="Confidence", markers=True, title="Confidence Over Time")
-            fig.update_layout(yaxis_range=[0,100], template="plotly_dark")
+            fig.update_layout(yaxis_range=[0,100], template="plotly_white")
             st.plotly_chart(fig, use_container_width=True)
 
 with t2:

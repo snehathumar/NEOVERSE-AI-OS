@@ -10,47 +10,28 @@ st.set_page_config(page_title="NEOVERSE | Analytics", page_icon="📊", layout="
 def apply_custom_css():
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-    
-    .stApp { 
-        background: linear-gradient(135deg, #09090b 0%, #111827 100%);
-        color: #e2e8f0; 
-        font-family: 'Inter', sans-serif; 
-    }
-    
-    h1, h2, h3, h4, h5 { 
-        color: #ffffff !important; 
-        font-weight: 800; 
-        letter-spacing: -0.5px; 
-    }
-    
-    .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    }
-    
-    .metric-value { 
-        font-size: 2.5rem; 
-        font-weight: 800; 
-        background: -webkit-linear-gradient(45deg, #38bdf8, #818cf8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .gpu-metric {
-        font-size: 3rem;
-        font-weight: 900;
-        background: -webkit-linear-gradient(45deg, #10b981, #3b82f6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    </style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+    body, .stApp { font-family: 'Outfit', sans-serif; background-color: transparent; color: #1e293b; }
+    .glass-card, .kpi-card, .metric-card { background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); transition: transform 0.2s, box-shadow 0.2s; color: #1e293b; }
+    .glass-card:hover, .kpi-card:hover, .metric-card:hover { transform: translateY(-2px); border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    .minority-card { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; }
+    .expert-avatar { font-size: 2rem; margin-right: 10px; }
+    h1, h2, h3, h4, h5 { color: #0f172a !important; font-weight: 600; }
+    hr { border-top: 1px solid #e2e8f0; }
+    /* specific overrides */
+    .status-ok { color: #10b981; font-weight: bold; }
+    .status-warn { color: #f59e0b; font-weight: bold; }
+    .status-alert { color: #ef4444; font-weight: bold; }
+    .gpu-active { color: #10b981; font-weight: bold; }
+    .gpu-inactive { color: #f59e0b; font-weight: bold; }
+    .bq-connected { color: #2563eb; font-weight: bold; }
+    .alert-critical { background: #fef2f2; border-left: 5px solid #ef4444; }
+    .alert-high { background: #fffbeb; border-left: 5px solid #f59e0b; }
+    .badge { padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 0.85em; display: inline-block; margin-bottom: 10px; }
+    .badge-Pending { background: #fef3c7; color: #b45309; }
+    .badge-Approved { background: #d1fae5; color: #047857; }
+    .badge-Rejected { background: #fee2e2; color: #b91c1c; }
+</style>
     """, unsafe_allow_html=True)
 
 def render_dashboard():
