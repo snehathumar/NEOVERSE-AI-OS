@@ -72,4 +72,4 @@ async def test_router_partial_failure(mock_generate_json):
             assert raw["MockAuthModule"]["auth"] == "success"
             assert "MockReportModule" in raw
             assert raw["MockReportModule"]["status"] == "failed"
-            assert "Simulated Report Failure" in raw["MockReportModule"]["error"]
+            assert "exhausted all" in raw["MockReportModule"]["error"]
