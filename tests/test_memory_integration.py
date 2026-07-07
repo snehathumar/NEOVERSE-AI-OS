@@ -65,8 +65,8 @@ def test_knowledge_graph_relations():
     saved_a = manager.remember(insight_a)
     
     insight_b = KnowledgeMemory(
-        domain="Strategy",
-        insight="First-mover advantage has high costs.",
+        domain="Operations",
+        insight="We need to scale our servers.",
         depends_on=[saved_a.id],
         contradicts=[saved_a.id]
     )

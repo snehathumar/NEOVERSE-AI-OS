@@ -20,7 +20,7 @@ class TestEnterpriseStorage(unittest.TestCase):
         # Verify it can be retrieved via search
         results = self.storage.search("users", {"username": "admin"})
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].email, "admin@neoverse.ai")
+        self.assertEqual(results[0]["email"], "admin@neoverse.ai")
 
     def test_history_retrieval(self):
         session_id = str(uuid.uuid4())
@@ -45,7 +45,7 @@ class TestEnterpriseStorage(unittest.TestCase):
         
         # Verify update
         results = self.storage.search("decisions", {"id": d.id})
-        self.assertEqual(results[0].confidence, 99)
+        self.assertEqual(results[0]["confidence"], 99)
         
         # Delete
         deleted = self.storage.delete("decisions", d.id)

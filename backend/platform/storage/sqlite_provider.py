@@ -2,6 +2,8 @@ import sqlite3
 import json
 import logging
 import time
+import threading
+import contextlib
 from typing import Dict, Any, List, Optional
 from backend.platform.storage.manager import StorageManager
 from backend.platform.storage.models import (
@@ -17,11 +19,19 @@ class SQLiteStorage(StorageManager):
     """
     def __init__(self, db_path: str = "neoverse.db"):
         self.db_path = db_path
+        self._lock = threading.RLock()
+
+    @contextlib.contextmanager
+    def _locked_connection(self):
+        with self._lock:
+            with self._get_connection() as conn:
+                yield conn
 
     def _get_connection(self):
         if self.db_path == ":memory:" and hasattr(self, "_mem_conn"):
             return self._mem_conn
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
+        conn.execute("PRAGMA journal_mode=WAL")
         conn.row_factory = sqlite3.Row
         if self.db_path == ":memory:":
             self._mem_conn = conn
@@ -35,7 +45,7 @@ class SQLiteStorage(StorageManager):
     def _ensure_table(self, collection: str):
         """Creates the collection table if it doesn't exist."""
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
-        with self._get_connection() as conn:
+        with self._locked_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS {safe_col} (
@@ -45,7 +55,7 @@ class SQLiteStorage(StorageManager):
                     metadata JSON NOT NULL
                 )
             ''')
-            conn.commit()
+
 
     def _save_entity(self, collection: str, entity: StorageModel) -> StorageModel:
         """Generic save method for StorageModels."""
@@ -56,13 +66,13 @@ class SQLiteStorage(StorageManager):
         retries = 3
         while retries > 0:
             try:
-                with self._get_connection() as conn:
+                with self._locked_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute(
                         f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
                         (entity.id, entity.created_at, entity.updated_at, json.dumps(data_dict))
                     )
-                    conn.commit()
+    
                 return entity
             except sqlite3.Error as e:
                 logger.error(f"Database error saving to {safe_col}: {e}")
@@ -76,9 +86,9 @@ class SQLiteStorage(StorageManager):
     def _get_entity(self, collection: str, document_id: str, model_class: type) -> Optional[StorageModel]:
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if row:
                     data = json.loads(row['metadata'])
@@ -95,24 +105,25 @@ class SQLiteStorage(StorageManager):
         created_at = data.get('created_at', datetime.now(timezone.utc).isoformat())
         updated_at = datetime.now(timezone.utc).isoformat()
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
                     (document_id, created_at, updated_at, json.dumps(data))
                 )
-                conn.commit()
+
             return document_id
         except sqlite3.Error as e:
             logger.error(f"Database error saving raw to {safe_col}: {e}")
             return document_id
 
     def get(self, collection: str, document_id: str) -> Optional[Dict[str, Any]]:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if row:
                     return json.loads(row['metadata'])
@@ -126,7 +137,7 @@ class SQLiteStorage(StorageManager):
         writes format: [{"collection": "users", "id": "1", "data": {...}, "action": "set"|"update"|"delete"}]
         """
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 for w in writes:
                     col = w['collection']
@@ -147,7 +158,7 @@ class SQLiteStorage(StorageManager):
                     elif action == 'update':
                         # Simplistic update, ideally should merge JSON
                         data = w['data']
-                        cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (doc_id,))
+                        cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (doc_id,))  # nosec B608
                         row = cursor.fetchone()
                         if row:
                             metadata = json.loads(row['metadata'])
@@ -155,12 +166,12 @@ class SQLiteStorage(StorageManager):
                             from datetime import datetime, timezone
                             updated_at = datetime.now(timezone.utc).isoformat()
                             cursor.execute(
-                                f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",
+                                f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",  # nosec B608
                                 (updated_at, json.dumps(metadata), doc_id)
                             )
                     elif action == 'delete':
-                        cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (doc_id,))
-                conn.commit()
+                        cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (doc_id,))  # nosec B608
+
             return True
         except sqlite3.Error as e:
             logger.error(f"SQLite batch write failed: {e}")
@@ -170,7 +181,7 @@ class SQLiteStorage(StorageManager):
         """
         Executes a callback within a SQLite connection context (acting as transaction).
         """
-        with self._get_connection() as conn:
+        with self._locked_connection() as conn:
             # We pass `conn` as the transaction object and `self` as the DB
             return callback(conn, self)
 
@@ -190,11 +201,11 @@ class SQLiteStorage(StorageManager):
 
     def get_history(self, session_id: str) -> List[Message]:
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 # Use JSON extraction to filter in sqlite
                 # For basic sqlite without json1, we can just load and filter
-                cursor.execute(f"SELECT metadata FROM messages")
+                cursor.execute(f"SELECT metadata FROM messages")  # nosec B608
                 rows = cursor.fetchall()
                 history = []
                 for row in rows:
@@ -213,9 +224,9 @@ class SQLiteStorage(StorageManager):
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         model_class = return_class or dict
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col}")
+                cursor.execute(f"SELECT metadata FROM {safe_col}")  # nosec B608
                 rows = cursor.fetchall()
                 results = []
                 for row in rows:
@@ -236,23 +247,25 @@ class SQLiteStorage(StorageManager):
             return []
 
     def delete(self, collection: str, document_id: str) -> bool:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))
-                conn.commit()
+                cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
+
                 return cursor.rowcount > 0
         except sqlite3.Error as e:
             logger.error(f"Database delete error: {e}")
             return False
 
     def update(self, collection: str, document_id: str, data: Dict[str, Any]) -> bool:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if not row: return False
                 
@@ -264,10 +277,10 @@ class SQLiteStorage(StorageManager):
                 updated_at = datetime.now(timezone.utc).isoformat()
                 
                 cursor.execute(
-                    f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",
+                    f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",  # nosec B608
                     (updated_at, json.dumps(metadata), document_id)
                 )
-                conn.commit()
+
                 return True
         except sqlite3.Error as e:
             logger.error(f"Database update error: {e}")

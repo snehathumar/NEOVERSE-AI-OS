@@ -85,4 +85,7 @@ class AsyncExecutor:
             # If we reach here, we failed this attempt. Backoff slightly before retry.
             await asyncio.sleep(1)
             
-        raise Exception(f"Module {module_name} exhausted all {self.max_retries} retries.")
+        if 'e' in locals():
+            raise Exception(f"Module {module_name} exhausted all {self.max_retries} retries. Last error: {e}")
+        else:
+            raise Exception(f"Module {module_name} exhausted all {self.max_retries} retries.")

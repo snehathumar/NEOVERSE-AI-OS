@@ -23,7 +23,7 @@ st.markdown("""
     .status-alert { color: #ef4444; font-weight: bold; }
     .gpu-active { color: #10b981; font-weight: bold; }
     .gpu-inactive { color: #f59e0b; font-weight: bold; }
-    .bq-connected { color: #2563eb; font-weight: bold; }
+    .bq-connected { color: #4f46e5; font-weight: bold; }
     .alert-critical { background: #fef2f2; border-left: 5px solid #ef4444; }
     .alert-high { background: #fffbeb; border-left: 5px solid #f59e0b; }
     .badge { padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 0.85em; display: inline-block; margin-bottom: 10px; }

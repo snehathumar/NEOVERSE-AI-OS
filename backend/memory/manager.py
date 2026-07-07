@@ -113,7 +113,7 @@ class MemoryManager:
         # In a high-traffic env, we'd batch this or use Firestore increment
         # Here we do a lightweight update to avoid rewriting the whole document
         try:
-            self.storage.save(collection, memory.id, {
+            self.storage.update(collection, memory.id, {
                 "retrieval_frequency": memory.retrieval_frequency,
                 "last_access_time": memory.last_access_time
             })
@@ -140,10 +140,19 @@ class MemoryManager:
         results.sort(key=lambda x: x.created_at, reverse=True)
         return results[:limit]
 
+    def retrieve_important(self, category: str, min_importance: int = 0, limit: int = 10) -> List[CognitiveMemory]:
+        """Retrieves memories filtered by minimum importance score, sorted descending."""
+        results = self.retrieve(category)
+        # Filter memories that have an importance_score >= min_importance
+        filtered = [r for r in results if getattr(r, 'importance_score', 0) >= min_importance]
+        # Sort by importance_score descending
+        filtered.sort(key=lambda x: getattr(x, 'importance_score', 0), reverse=True)
+        return filtered[:limit]
+
     def archive(self, category: str, memory_id: str) -> bool:
         collection = f"org_{self.org_id}_{category}s"
         try:
-            self.storage.save(collection, memory_id, {"lifecycle_state": "archived"})
+            self.storage.update(collection, memory_id, {"lifecycle_state": "archived"})
             return True
         except Exception:
             return False
@@ -152,11 +161,19 @@ class MemoryManager:
         """Soft delete."""
         collection = f"org_{self.org_id}_{category}s"
         try:
-            self.storage.save(collection, memory_id, {"lifecycle_state": "deleted"})
+            self.storage.update(collection, memory_id, {"lifecycle_state": "deleted"})
             return True
         except Exception:
             return False
             
+    def restore(self, category: str, memory_id: str) -> bool:
+        """Restore archived or soft-deleted memory."""
+        collection = f"org_{self.org_id}_{category}s"
+        try:
+            self.storage.update(collection, memory_id, {"lifecycle_state": "active"})
+            return True
+        except Exception:
+            return False
     def get_agent_state(self, current_task: str) -> Optional[CognitiveMemory]:
         states = self.retrieve("agent_state", {"current_task": current_task})
         if states:

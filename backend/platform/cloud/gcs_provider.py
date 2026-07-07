@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Optional
+from typing import Optional, Dict, Any
 from backend.platform.cloud.logging_provider import cloud_logger
 
 class GCSProvider:
