@@ -13,3 +13,12 @@ tenacity
 yfinance
 feedparser
 pytest-asyncio
+plotly
+streamlit-agraph
+reportlab
+python-docx
+fastapi
+uvicorn
+httpx
+prometheus-client
+requests
