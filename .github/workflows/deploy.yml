@@ -46,6 +46,8 @@ jobs:
           fi
 
       - name: Run Unit Tests
+        env:
+          PYTHONPATH: .
         run: pytest tests/
 
       - name: Run Security Audit (Bandit)

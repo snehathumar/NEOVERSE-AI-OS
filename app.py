@@ -88,8 +88,8 @@ st.markdown("""
     h1, h2, h3, h4, h5 { color: #0f172a !important; font-weight: 600; }
     p, span, div { color: #334155; }
     hr { border-top: 1px solid #e2e8f0; }
-    .stButton>button { border-radius: 8px; border: 1px solid #2563eb; background: #2563eb; color: #ffffff; font-weight: 500; transition: all 0.3s ease; }
-    .stButton>button:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
+    .stButton>button { border-radius: 8px; border: 1px solid #4f46e5; background: #4f46e5; color: #ffffff; font-weight: 500; transition: all 0.3s ease; }
+    .stButton>button:hover { background: #4338ca; border-color: #4338ca; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
     /* Hide some Streamlit defaults to look more like an app */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -151,13 +151,13 @@ if len(st.session_state.messages) == 0:
     # Dashboard Metrics
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.markdown(f"<div class='glass-card'><div class='metric-value'>{total_decisions}</div><div class='metric-label'>Total Decisions</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Total Decisions</div><div class='metric-value'>{total_decisions}</div></div>", unsafe_allow_html=True)
     with m2:
-        st.markdown(f"<div class='glass-card'><div class='metric-value'>{approved}</div><div class='metric-label'>Approved</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Approved</div><div class='metric-value'>{approved}</div></div>", unsafe_allow_html=True)
     with m3:
-        st.markdown(f"<div class='glass-card'><div class='metric-value'>{int(avg_confidence) if isinstance(avg_confidence, (float, int)) else avg_confidence}%</div><div class='metric-label'>Avg Confidence</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>Avg Confidence</div><div class='metric-value'>{int(avg_confidence) if isinstance(avg_confidence, (float, int)) else avg_confidence}%</div></div>", unsafe_allow_html=True)
     with m4:
-        st.markdown(f"<div class='glass-card'><div class='metric-value' style='color:#10b981; font-size: 1.8rem;'>Operational</div><div class='metric-label'>System Status</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><div class='metric-label'>System Status</div><div class='metric-value' style='color:#10b981; font-size: 1.8rem;'>Operational</div></div>", unsafe_allow_html=True)
 
     # Demo Buttons & Real AI Workspace
     st.markdown("### AI Workspace")
