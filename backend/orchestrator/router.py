@@ -94,6 +94,7 @@ class EnterpriseRouter:
             
             # 12. Return Unified Response (with trace attached for Judge Mode)
             final_response["_routing_trace"] = routing_trace
+            final_response["_raw_module_outputs"] = raw_results
             event_bus.publish(events.ROUTER_RESPONSE_GENERATED, {"request_id": request_id, "latency": routing_trace["total_latency"]})
             
             # Stream to BigQuery asynchronously

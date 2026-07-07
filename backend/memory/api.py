@@ -38,8 +38,7 @@ class MemoryAPI:
         return self.manager.archive(category, memory_id)
 
     def restore(self, category: str, memory_id: str) -> bool:
-        collection = f"{category}s"
-        return self.manager.storage.update(collection, memory_id, {"lifecycle_state": "active"})
+        return self.manager.restore(category, memory_id)
 
     def forget(self, category: str, memory_id: str) -> bool:
         return self.manager.delete(category, memory_id)

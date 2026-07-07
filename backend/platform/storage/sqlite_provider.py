@@ -45,7 +45,7 @@ class SQLiteStorage(StorageManager):
                     metadata JSON NOT NULL
                 )
             ''')
-            conn.commit()
+
 
     def _save_entity(self, collection: str, entity: StorageModel) -> StorageModel:
         """Generic save method for StorageModels."""
@@ -62,7 +62,7 @@ class SQLiteStorage(StorageManager):
                         f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
                         (entity.id, entity.created_at, entity.updated_at, json.dumps(data_dict))
                     )
-                    conn.commit()
+    
                 return entity
             except sqlite3.Error as e:
                 logger.error(f"Database error saving to {safe_col}: {e}")
@@ -101,13 +101,14 @@ class SQLiteStorage(StorageManager):
                     f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
                     (document_id, created_at, updated_at, json.dumps(data))
                 )
-                conn.commit()
+
             return document_id
         except sqlite3.Error as e:
             logger.error(f"Database error saving raw to {safe_col}: {e}")
             return document_id
 
     def get(self, collection: str, document_id: str) -> Optional[Dict[str, Any]]:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
             with self._get_connection() as conn:
@@ -160,7 +161,7 @@ class SQLiteStorage(StorageManager):
                             )
                     elif action == 'delete':
                         cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (doc_id,))
-                conn.commit()
+
             return True
         except sqlite3.Error as e:
             logger.error(f"SQLite batch write failed: {e}")
@@ -236,18 +237,20 @@ class SQLiteStorage(StorageManager):
             return []
 
     def delete(self, collection: str, document_id: str) -> bool:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))
-                conn.commit()
+
                 return cursor.rowcount > 0
         except sqlite3.Error as e:
             logger.error(f"Database delete error: {e}")
             return False
 
     def update(self, collection: str, document_id: str, data: Dict[str, Any]) -> bool:
+        self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
             with self._get_connection() as conn:
@@ -267,7 +270,7 @@ class SQLiteStorage(StorageManager):
                     f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",
                     (updated_at, json.dumps(metadata), document_id)
                 )
-                conn.commit()
+
                 return True
         except sqlite3.Error as e:
             logger.error(f"Database update error: {e}")
