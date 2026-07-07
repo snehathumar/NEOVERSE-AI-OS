@@ -11,18 +11,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Debug repo layout
+        run: |
+          echo "Root listing:"
+          ls -la
+          echo "backend listing:"
+          ls -la backend || true
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          
+
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
-        
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            pip install -r backend/requirements.txt
+          else
+            echo "ERROR: backend/requirements.txt not found. Falling back to repo root requirements.txt if present."
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            else
+              echo "No requirements file found. Exiting." >&2
+              ls -la
+              exit 1
+            fi
+          fi
+
       - name: Run Unit Tests
         run: pytest backend/tests/
-        
+
       - name: Run Security Audit (Bandit)
         run: |
           pip install bandit
@@ -34,24 +56,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-          
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
-        
+
       - name: Build & Push Docker Image
         run: |
           gcloud auth configure-docker
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }} -f backend/Dockerfile .
+          # Use backend/ as build context so backend/* is included in the image context
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }} -f backend/Dockerfile backend/
           docker push gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }}
           # Tag as latest
           docker tag gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:${{ github.sha }} gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:latest
           docker push gcr.io/${{ secrets.GCP_PROJECT }}/neoverse/backend:latest
-          
+
       - name: Deploy to Kubernetes
         run: |
           gcloud container clusters get-credentials neoverse-cluster --region us-central1 --project ${{ secrets.GCP_PROJECT }}
