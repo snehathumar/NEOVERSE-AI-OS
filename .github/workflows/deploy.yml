@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: Run Unit Tests
-        run: pytest backend/tests/
+        run: pytest tests/
 
       - name: Run Security Audit (Bandit)
         run: |
