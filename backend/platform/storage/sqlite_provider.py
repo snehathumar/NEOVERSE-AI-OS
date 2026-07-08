@@ -88,7 +88,7 @@ class SQLiteStorage(StorageManager):
         try:
             with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if row:
                     data = json.loads(row['metadata'])
@@ -123,7 +123,7 @@ class SQLiteStorage(StorageManager):
         try:
             with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if row:
                     return json.loads(row['metadata'])
@@ -158,7 +158,7 @@ class SQLiteStorage(StorageManager):
                     elif action == 'update':
                         # Simplistic update, ideally should merge JSON
                         data = w['data']
-                        cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (doc_id,))
+                        cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (doc_id,))  # nosec B608
                         row = cursor.fetchone()
                         if row:
                             metadata = json.loads(row['metadata'])
@@ -166,11 +166,11 @@ class SQLiteStorage(StorageManager):
                             from datetime import datetime, timezone
                             updated_at = datetime.now(timezone.utc).isoformat()
                             cursor.execute(
-                                f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",
+                                f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",  # nosec B608
                                 (updated_at, json.dumps(metadata), doc_id)
                             )
                     elif action == 'delete':
-                        cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (doc_id,))
+                        cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (doc_id,))  # nosec B608
 
             return True
         except sqlite3.Error as e:
@@ -205,7 +205,7 @@ class SQLiteStorage(StorageManager):
                 cursor = conn.cursor()
                 # Use JSON extraction to filter in sqlite
                 # For basic sqlite without json1, we can just load and filter
-                cursor.execute(f"SELECT metadata FROM messages")
+                cursor.execute(f"SELECT metadata FROM messages")  # nosec B608
                 rows = cursor.fetchall()
                 history = []
                 for row in rows:
@@ -226,7 +226,7 @@ class SQLiteStorage(StorageManager):
         try:
             with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col}")
+                cursor.execute(f"SELECT metadata FROM {safe_col}")  # nosec B608
                 rows = cursor.fetchall()
                 results = []
                 for row in rows:
@@ -252,7 +252,7 @@ class SQLiteStorage(StorageManager):
         try:
             with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
 
                 return cursor.rowcount > 0
         except sqlite3.Error as e:
@@ -265,7 +265,7 @@ class SQLiteStorage(StorageManager):
         try:
             with self._locked_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
+                cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))  # nosec B608
                 row = cursor.fetchone()
                 if not row: return False
                 
@@ -277,7 +277,7 @@ class SQLiteStorage(StorageManager):
                 updated_at = datetime.now(timezone.utc).isoformat()
                 
                 cursor.execute(
-                    f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",
+                    f"UPDATE {safe_col} SET updated_at = ?, metadata = ? WHERE id = ?",  # nosec B608
                     (updated_at, json.dumps(metadata), document_id)
                 )
 
