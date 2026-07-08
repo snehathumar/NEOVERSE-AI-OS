@@ -2,6 +2,8 @@ import sqlite3
 import json
 import logging
 import time
+import threading
+import contextlib
 from typing import Dict, Any, List, Optional
 from backend.platform.storage.manager import StorageManager
 from backend.platform.storage.models import (
@@ -17,11 +19,19 @@ class SQLiteStorage(StorageManager):
     """
     def __init__(self, db_path: str = "neoverse.db"):
         self.db_path = db_path
+        self._lock = threading.RLock()
+
+    @contextlib.contextmanager
+    def _locked_connection(self):
+        with self._lock:
+            with self._get_connection() as conn:
+                yield conn
 
     def _get_connection(self):
         if self.db_path == ":memory:" and hasattr(self, "_mem_conn"):
             return self._mem_conn
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
+        conn.execute("PRAGMA journal_mode=WAL")
         conn.row_factory = sqlite3.Row
         if self.db_path == ":memory:":
             self._mem_conn = conn
@@ -35,7 +45,7 @@ class SQLiteStorage(StorageManager):
     def _ensure_table(self, collection: str):
         """Creates the collection table if it doesn't exist."""
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
-        with self._get_connection() as conn:
+        with self._locked_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS {safe_col} (
@@ -56,7 +66,7 @@ class SQLiteStorage(StorageManager):
         retries = 3
         while retries > 0:
             try:
-                with self._get_connection() as conn:
+                with self._locked_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute(
                         f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
@@ -76,7 +86,7 @@ class SQLiteStorage(StorageManager):
     def _get_entity(self, collection: str, document_id: str, model_class: type) -> Optional[StorageModel]:
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
                 row = cursor.fetchone()
@@ -95,7 +105,7 @@ class SQLiteStorage(StorageManager):
         created_at = data.get('created_at', datetime.now(timezone.utc).isoformat())
         updated_at = datetime.now(timezone.utc).isoformat()
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     f"INSERT OR REPLACE INTO {safe_col} (id, created_at, updated_at, metadata) VALUES (?, ?, ?, ?)",
@@ -111,7 +121,7 @@ class SQLiteStorage(StorageManager):
         self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
                 row = cursor.fetchone()
@@ -127,7 +137,7 @@ class SQLiteStorage(StorageManager):
         writes format: [{"collection": "users", "id": "1", "data": {...}, "action": "set"|"update"|"delete"}]
         """
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 for w in writes:
                     col = w['collection']
@@ -171,7 +181,7 @@ class SQLiteStorage(StorageManager):
         """
         Executes a callback within a SQLite connection context (acting as transaction).
         """
-        with self._get_connection() as conn:
+        with self._locked_connection() as conn:
             # We pass `conn` as the transaction object and `self` as the DB
             return callback(conn, self)
 
@@ -191,7 +201,7 @@ class SQLiteStorage(StorageManager):
 
     def get_history(self, session_id: str) -> List[Message]:
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 # Use JSON extraction to filter in sqlite
                 # For basic sqlite without json1, we can just load and filter
@@ -214,7 +224,7 @@ class SQLiteStorage(StorageManager):
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         model_class = return_class or dict
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"SELECT metadata FROM {safe_col}")
                 rows = cursor.fetchall()
@@ -240,7 +250,7 @@ class SQLiteStorage(StorageManager):
         self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"DELETE FROM {safe_col} WHERE id = ?", (document_id,))
 
@@ -253,7 +263,7 @@ class SQLiteStorage(StorageManager):
         self._ensure_table(collection)
         safe_col = ''.join(c for c in collection if c.isalnum() or c == '_')
         try:
-            with self._get_connection() as conn:
+            with self._locked_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"SELECT metadata FROM {safe_col} WHERE id = ?", (document_id,))
                 row = cursor.fetchone()
