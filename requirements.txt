@@ -22,3 +22,4 @@ uvicorn
 httpx
 prometheus-client
 requests
+google-genai
