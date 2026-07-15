@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY")
 
+if "user_api_key" in st.session_state and st.session_state.user_api_key:
+    api_key = st.session_state.user_api_key
+    os.environ["GEMINI_API_KEY"] = api_key
+    os.environ["GOOGLE_API_KEY"] = api_key
+
 st.set_page_config(
     page_title="NEOVERSE AI OS",
     page_icon="🌌",
@@ -37,7 +42,28 @@ if api_key and api_key != "your_gemini_api_key_here":
     genai.configure() # Automatically picks up GOOGLE_API_KEY from environment
     st.session_state.api_configured = True
 else:
-    st.session_state.api_configured = False
+    # Try to check st.secrets
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY")
+    except Exception:
+        pass
+
+    if api_key and api_key != "your_gemini_api_key_here":
+        os.environ["GOOGLE_API_KEY"] = api_key
+        genai.configure()
+        st.session_state.api_configured = True
+    else:
+        st.session_state.api_configured = False
+        with st.sidebar:
+            st.warning("GEMINI_API_KEY is missing.")
+            user_api_key = st.text_input("Enter your Gemini API Key:", type="password")
+            if user_api_key:
+                st.session_state.user_api_key = user_api_key
+                os.environ["GEMINI_API_KEY"] = user_api_key
+                os.environ["GOOGLE_API_KEY"] = user_api_key
+                genai.configure()
+                st.session_state.api_configured = True
+                st.rerun()
 
 def generate_with_fallback(prompt: str) -> str:
     """Dynamically fetches models from API studio and tries them one by one."""

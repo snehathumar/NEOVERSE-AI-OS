@@ -10,10 +10,19 @@ class DynamicLLMOrchestrator:
     NEVER hardcodes a model. Uses only the Google AI Studio API Key.
     """
     def __init__(self):
-        self.api_key = os.environ.get("GEMINI_API_KEY")
-        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self._init_api()
         self._available_models = []
         self._last_discovery = 0
+
+    def _init_api(self):
+        try:
+            import streamlit as st
+            if "user_api_key" in st.session_state and st.session_state.user_api_key:
+                os.environ["GEMINI_API_KEY"] = st.session_state.user_api_key
+        except Exception:
+            pass
+        self.api_key = os.environ.get("GEMINI_API_KEY")
+        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
         
     def _discover_models(self):
         """Fetches and filters models from Google AI Studio."""
@@ -50,6 +59,8 @@ class DynamicLLMOrchestrator:
             self._available_models = ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
 
     def generate_content(self, prompt: str, schema: dict = None) -> str:
+        if not self.client:
+            self._init_api()
         self._discover_models()
         
         if not self.client:

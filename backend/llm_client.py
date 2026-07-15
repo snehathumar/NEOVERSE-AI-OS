@@ -27,6 +27,14 @@ class DynamicModelOrchestrator:
         from dotenv import load_dotenv
         load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'), override=True)
         
+        # Check session state explicitly if running inside streamlit
+        try:
+            import streamlit as st
+            if "user_api_key" in st.session_state and st.session_state.user_api_key:
+                os.environ["GEMINI_API_KEY"] = st.session_state.user_api_key
+        except Exception:
+            pass
+            
         self._api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("VITE_GEMINI_API_KEY")
         if self._api_key and self._api_key != "YOUR_GEMINI_API_KEY_HERE":
             genai.configure(api_key=self._api_key)
@@ -78,6 +86,9 @@ class DynamicModelOrchestrator:
 
     def generate_json(self, prompt: str, schema: dict, custom_validation_fn=None) -> dict:
         """Executes prompt against the highest ranked healthy model, falling back automatically."""
+        if not self._api_key:
+            self._init_client()
+            
         if not genai or not self._api_key:
             return {"error": True, "error_message": "Generative AI SDK not initialized or API key missing."}
             
@@ -138,6 +149,9 @@ class DynamicModelOrchestrator:
                 
     def generate_text(self, prompt: str) -> str:
         """Generates raw text without JSON parsing."""
+        if not self._api_key:
+            self._init_client()
+            
         if not genai or not self._api_key:
             return "API Key missing or SDK not initialized."
             
